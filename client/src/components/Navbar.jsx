@@ -9,6 +9,7 @@ import CustomButton from "./CustomButton";
 import { users } from "../utils/data";
 import { useDispatch, useSelector } from "react-redux";
 import { Logout } from "../redux/userSlice";
+import { NoProfile } from "../assets";
 
 function MenuList({ user, onClick }) {
   const dispatch = useDispatch();
@@ -33,7 +34,7 @@ function MenuList({ user, onClick }) {
             </div>
 
             <img
-              src={user?.profileUrl}
+              src={user?.profileUrl || NoProfile}
               alt='user profile'
               className='w-10 h-10 rounded-full object-cover '
             />
@@ -128,7 +129,9 @@ const Navbar = () => {
               <Link to='/companies'>Companies</Link>
             </li>
             <li>
-              <Link to='/upload-job'>Upload Job</Link>
+              <Link  to={
+              user?.accountType === "seeker" ? "/applications" : "/upload-job"
+            }>{user?.accountType === "seeker" ? "Applications" : "Upload Job"}</Link>
             </li>
             <li>
               <Link to='/about-us'>About</Link>
@@ -173,7 +176,7 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.accountType === "seeker" ? "applly-gistory" : "upload-job"
+              user?.accountType === "seeker" ? "/applications" : "/upload-job"
             }
           >
             {user?.accountType === "seeker" ? "Applications" : "Upload Job"}

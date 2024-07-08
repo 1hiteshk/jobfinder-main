@@ -177,11 +177,14 @@ const CompnayForm = ({ open, setOpen }) => {
                     </div>
 
                     <div className='mt-4'>
+                      {
+                        isLoading? <Loading/>:
                       <CustomButton
                         type='submit'
                         containerStyles='inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-8 py-2 text-sm font-medium text-white hover:bg-[#1d4fd846] hover:text-[#1d4fd8] focus:outline-none '
                         title={"Submit"}
                       />
+                      }
                     </div>
                   </form>
                 </Dialog.Panel>
@@ -218,6 +221,7 @@ const CompanyProfile = () => {
       });
       
       setInfo(res?.data);
+      localStorage.setItem("userInfo", JSON.stringify(res?.data));
       setIsLoading(false);
 
     } catch (error) {
@@ -226,9 +230,10 @@ const CompanyProfile = () => {
     }
   }
 
+  console.log(info)
   useEffect(() => {
     fetchCompany();
-    setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
+   // setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
@@ -289,10 +294,11 @@ const CompanyProfile = () => {
         <p>Jobs Posted</p>
 
         <div className='flex flex-wrap gap-3'>
-          {jobs?.map((job, index) => {
+          {info?.jobPosts?.map((job, index) => {
             const data = {
               name: info?.name,
               email: info?.email,
+              logo: info?.profileUrl,
               ...job,
             };
             return <JobCard job={data} key={index} />;

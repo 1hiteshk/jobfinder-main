@@ -6,6 +6,8 @@ import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
 import { CustomButton, TextInput } from "../components";
+import { NoProfile } from "../assets";
+import { handleFileUpload } from "../utils";
 
 const UserForm = ({ open, setOpen }) => {
   const { user } = useSelector((state) => state.user);
@@ -23,7 +25,15 @@ const UserForm = ({ open, setOpen }) => {
   const [profileImage, setProfileImage] = useState("");
   const [uploadCv, setUploadCv] = useState("");
 
-  const onSubmit = async (data) => {};
+  const onSubmit = async (data) => {
+    try {
+      const uri = profileImage && (await handleFileUpload(profileImage));
+
+      const newData = uri ? {...data, profileUrl: uri} : data;
+    } catch (error) {
+      
+    }
+  };
 
   const closeModal = () => setOpen(false);
 
@@ -243,7 +253,7 @@ const UserProfile = () => {
 
             <div className='w-full md:w-1/3 h-44'>
               <img
-                src={userInfo?.profileUrl}
+                src={userInfo?.profileUrl || NoProfile}
                 alt={userInfo?.firstName}
                 className='w-full h-48 object-contain rounded-lg'
               />
