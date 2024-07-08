@@ -8,6 +8,8 @@ import { FiPhoneCall, FiEdit3, FiUpload } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { companies, jobs } from "../utils/data";
 import { CustomButton, JobCard, Loading, TextInput } from "../components";
+import { apiRequest, handleFileUpload } from "../utils";
+import { Login } from "../redux/userSlice";
 
 const CompnayForm = ({ open, setOpen }) => {
   const { user } = useSelector((state) => state.user);
@@ -19,20 +21,56 @@ const CompnayForm = ({ open, setOpen }) => {
     formState: { errors },
   } = useForm({
     mode: "onChange",
-    defaultValues: { ...user?.user },
+    defaultValues: { ...user },
   });
 
   const dispatch = useDispatch();
   const [profileImage, setProfileImage] = useState("");
   const [uploadCv, setUploadCv] = useState("");
+  const [isLoading,setIsLoading] = useState(false);
+  const [errMsg,setErrMsg] = useState({status: false});
 
-  const onSubmit = () => {};
+  const onSubmit = async(data) => {
+    setIsLoading(true);
+    setErrMsg(null);
+
+    const uri = profileImage && (await handleFileUpload(profileImage));
+
+    const newData = uri ? {...data, profileUrl: uri} : data ;
+
+    try {
+      const res = await apiRequest({
+        url: `/companies/update-company`,
+        token: user?.token,
+        data: newData,
+        method: "PUT",
+      });
+      setIsLoading(false);
+
+      console.log(res)
+
+      if(res.status==='failed'){
+        setErrMsg({...res});
+      } else {
+        setErrMsg({status: 'success', message:res.message });
+        dispatch(Login(data));
+        localStorage.setItem("userInfo", JSON.stringify(data));
+
+        setTimeout(()=>{
+          window.location.reload();
+        },1500);
+      }
+    } catch (error) {
+        console.log(error);
+        setIsLoading(false);
+    }
+  };
 
   const closeModal = () => setOpen(false);
 
   return (
     <>
-      <Transition appear show={opener ?? false} as={Fragment}>
+      <Transition appear show={open ?? false} as={Fragment}>
         <Dialog as='div' className='relative z-50' onClose={closeModal}>
           <Transition.Child
             as={Fragment}
@@ -158,12 +196,38 @@ const CompnayForm = ({ open, setOpen }) => {
 
 const CompanyProfile = () => {
   const params = useParams();
-  const { user } = useSelector((state) => state.user);
+  const  {user}  = useSelector((state) => state.user);
   const [info, setInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
 
+  const fetchCompany = async ()=> {
+    setIsLoading(true);
+    let id = null;
+
+    if(params.id && params.id !== undefined){
+      id = params?.id;
+    } else {
+      id = user?._id;
+    }
+
+    try {
+      const res = await apiRequest({
+        url: `/companies/get-company/${id}`,
+        method: "GET",
+      });
+      
+      setInfo(res?.data);
+      setIsLoading(false);
+
+    } catch (error) {
+        console.log(error);
+        setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
+    fetchCompany();
     setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
@@ -171,6 +235,9 @@ const CompanyProfile = () => {
   if (isLoading) {
     return <Loading />;
   }
+
+  console.log(user?.user?.accountType);
+  console.log({user}?.user?._id, info?._id);
 
   return (
     <div className='container mx-auto p-5'>
@@ -181,8 +248,8 @@ const CompanyProfile = () => {
           </h2>
 
           {user?.user?.accountType === undefined &&
-            info?._id === user?.user?._id && (
-              <div className='flex items-center justifu-center py-5 md:py-0 gap-4'>
+            info?._id === {user}?.user?._id && (
+              <div className='flex items-center justify-center py-5 md:py-0 gap-4'>
                 <CustomButton
                   onClick={() => setOpenForm(true)}
                   iconRight={<FiEdit3 />}
