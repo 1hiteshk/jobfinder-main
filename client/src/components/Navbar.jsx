@@ -142,7 +142,7 @@ const Navbar = () => {
             {!user?.token ? (
               <Link to='/user-auth'>
                 <CustomButton
-                  title='Sign In'
+                  title='Sign in'
                   containerStyles='text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600'
                 />
               </Link>
